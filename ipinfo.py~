@@ -1,0 +1,25 @@
+#!/usr/bin/python
+
+# -*- coding=GBK*
+#module
+from urllib.request import urlopen
+import json
+import os
+#import termcolor
+ 
+#Variable
+url="http://ip.taobao.com/service/getIpInfo.php?ip="
+#url1="http://www.ip138.com/ips.asp?ip="+s+"&action=2"
+#function
+def ip_detail():
+    data=urlopen(url+ip).read()
+    datadict=json.loads(data.decode())
+    print ("该IP的详细信息为:\n"+ "国家/地区："+ datadict["data"]["country"] + "/" + datadict["data"]["area"] +"\n省份：\t" + datadict["data"]["region"]+"\n城市:\t"+ datadict["data"]["city"]+"\n运营商：" + datadict["data"]["isp"])
+#main
+if __name__=="__main__":
+ #   print '中国与哦 '
+    os.system("clear")
+    ip=input("input ip address>")
+    #data=urllib.urlopen(url).read()
+   # print data
+    ip_detail()

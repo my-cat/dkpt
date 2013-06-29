@@ -1,0 +1,13 @@
+class _MetaPacket(type):
+    def __new__(cls, clsname, clsbases, clsdict):
+        t = type.__new__(cls, clsname, clsbases, clsdict)
+        st = getattr(t, '__hdr__', None)
+        if st is not None:
+            clsdict['__slots__'] = [ x[0] for x in st ] + [ 'data' ]
+            t = type.__new__(cls, clsname, clsbases, clsdict)
+            t.__hdr_fields__ = [ x[0] for x in st ]
+            t.__hdr_fmt__ = getattr(t, '__byte_order__', '>') + ''.join([ x[1] for x in st ])
+            t.__hdr_len__ = struct.calcsize(t.__hdr_fmt__)
+            t.__hdr_defaults__ = dict(zip(
+                t.__hdr_fields__, [ x[2] for x in st ]))
+        return t
