@@ -1,0 +1,99 @@
+#from  http import *
+import sys
+sys.path.append('/home/misery/mypkt')
+#print(sys.path)
+
+from ipaddress import IPv4Address 
+
+from sqlalchemy.ext.declarative import  declarative_base
+from sqlalchemy import Column, Integer, String
+from sqlalchemy import *
+from sqlalchemy.dialects import postgresql
+from sqlalchemy.orm import sessionmaker
+engine=create_engine('sqlite:///mem.db',echo=True)
+Base = declarative_base()
+class User(Base):
+    __tablename__='users'
+    
+    ip= Column(String, primary_key=True)
+    name= Column(String)
+
+    def __init__(self,ip,name):
+        self.name= name
+        self.ip=ip
+
+    def __repr__(self):
+        return "User ('%s','%s')"%(self.name,self.ip)
+
+from sqlalchemy.orm import relationship, backref
+from sqlalchemy.dialects.sqlite import DATETIME
+class Website(Base):
+    __tablename__='websites'
+    id=Column(Integer,primary_key=True)
+    websites =Column(String)
+    mytime=Column(DATETIME)
+    user_ip=Column(String,ForeignKey('users.ip'))
+    user=relationship('User',backref=backref('websites',order_by=id))
+   
+    def __init__(self,ip,websites,time):
+        self.user_ip=ip
+        self.websites=websites
+        self.mytime=time
+    
+    def __repr__(self):
+        return "websites (%s)" %self.websites
+    
+    def parse(self,buf):
+        pass
+
+Base.metadata.create_all(engine)    
+Session=sessionmaker(bind=engine)
+session=Session()
+
+
+import pcap,dpkt
+import ip
+import ethernet,tcp,udp,http_pro
+import datetime
+import time
+def read_file(filename):
+    f=open(filename, 'rb')
+    file1 = pcap.Reader(f)
+    return file1
+
+def parse_requset(ts,buf):
+    try:
+        eth = ethernet.Ethernet(buf)
+       # print(eth.type)
+        if eth.type == 2048 :
+            ip1=eth.data
+            tcp1=ip1.data
+            ip2=IPv4Address(ip1.src)
+            session.query(Website)
+            try:
+        #        print(1)
+                r= http_pro.Request(tcp1.data)
+                web= Website(str(ip2),r.headers['host'],datetime.datetime.fromtimestamp(ts))
+                return web
+            except dpkt.UnpackError:
+                pass
+    except:
+        pass
+def process_loop():
+    file1=read_file('123.pcap')
+    n=0
+    for ts , buf in file1:
+       web= parse_requset(ts,buf)
+       if web == None:
+           pass
+       else:
+           
+           session.add(web)
+       n=n+1
+       if n==50000:
+           print('here')
+           break
+    print(n)
+    session.commit()
+
+process_loop()
