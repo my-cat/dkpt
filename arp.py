@@ -27,4 +27,5 @@ class ARP(dpkt.Packet):
         ('tha', '6s', ''),
         ('tpa', '4s', '')
 
+
         )
